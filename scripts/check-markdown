@@ -13,13 +13,16 @@
 # Point it at text that instructs a model, or that quotes the patterns it
 # catalogs: `vale` and `harper-cli` read that text as the author's own prose,
 # and `rumdl` reads it as a document for a person.
+#
+# `cmd/agentic-web-search/skill.md` is the skill document the command prints
+# under `-skill`: it addresses a model, and it ships verbatim.
 
 set -u
 fail=0
 
 cd "$(git rev-parse --show-toplevel)" || exit 1
 
-skip_path=''
+skip_path='cmd/agentic-web-search/skill.md'
 ignore='SplitWords,MassNouns,ItsContraction,ThatThan,MissingTo,WrongNegative'
 ignore="$ignore,DisjointPrefixes,CompoundNouns,ExpandConfiguration,ExpandStandardInputAndOutput"
 ignore="$ignore,SpellCheck"
