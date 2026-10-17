@@ -16,6 +16,7 @@ A command in this module wraps something that already runs — a command-line pr
 ## Commands
 
 - `agentic-web-search` — searches the web through Exa's keyless MCP tier and prints one URL and one-line summary per result. `-json` emits the same list as one line of JSON, and `-skill` prints the skill document that teaches an agent to use it.
+- `agentic-web-fetch` — reads a URL as Markdown: it asks the site for a form meant for agents, follows the [llms.txt](https://llmstxt.org/) conventions, and otherwise strips the furniture from the HTML. `-json` emits the address the content came from, the branch that produced it, and the content as one line of JSON, and `-skill` prints the skill document that teaches an agent to use it.
 
 ### `agentic-web-search`
 
@@ -27,6 +28,31 @@ printf '%s' 'golang generics tutorial' | agentic-web-search
 ```
 
 `EXA_MCP_URL` points the command at another MCP endpoint.
+
+### `agentic-web-fetch`
+
+The command needs no account and no API key: it reaches the site itself. The URL arrives as the single argument, or on standard input when the command line carries none:
+
+```sh
+agentic-web-fetch https://go.dev/doc/go1.27 > page.md
+printf '%s' 'https://example.com/docs/guide' | agentic-web-fetch
+```
+
+Six branches are tried in order, and the branch taken goes to standard error (or into the `-json` payload): content negotiation, a `rel="alternate" type="text/markdown"` link, the `.md` variant of the URL, an `llms.txt` file that covers the page, a site rule, and the cleaned HTML.
+
+A page the generic pass reads badly gets a rule in `siteRules` ([`cmd/agentic-web-fetch/main.go`](cmd/agentic-web-fetch/main.go)). A rule names the hosts it serves, the CSS selector that holds the readable part, and the page furniture to remove before conversion. It optionally carries a mirror: a raw file, an API, or a host that serves the same content without the furniture.
+
+```go
+registry := webfetch.NewRegistry()
+registry.Add(webfetch.Rule{
+	Name:   "docs",
+	Hosts:  []string{"docs.example.com"},
+	Select: "#doc",
+	Drop:   []string{".sidebar"},
+})
+```
+
+The registry ships empty, so every page goes through the generic pass until a rule lands.
 
 ## Install
 
