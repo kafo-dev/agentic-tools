@@ -21,10 +21,11 @@ import (
 )
 
 const (
-	// UserAgent identifies the command to a site.
+	// UserAgent identifies the command to a site, and names the product token
+	// a robots.txt file matches.
 	UserAgent = "agentic-web-fetch/1.0 (+https://github.com/kafo-dev/agentic-tools)"
 	// DefaultTimeout bounds one request.
-	DefaultTimeout = 30 * time.Second
+	DefaultTimeout = 32 * time.Second
 	// acceptMarkdown asks for markdown first, and keeps HTML as the fallback.
 	acceptMarkdown = "text/markdown, text/html;q=0.9, text/plain;q=0.8, */*;q=0.1"
 	// maxBody caps one response body: an agent reads a page, not a download.
@@ -34,13 +35,15 @@ const (
 	// htmlMarker and doctypeMarker appear in the head of an HTML body.
 	htmlMarker    = "<html"
 	doctypeMarker = "<!doctype html"
+	// collectionKey names the slot a request leaves its collection in.
+	collectionKey = "webfetch.collection"
 )
 
-// Fetcher gets one page at a time with [colly].
+// Fetcher gets pages with [colly], under the rules the site publishes in its
+// robots.txt file. A Fetcher holds one collector, so the rules it has read
+// serve every request and a site answers for its robots.txt once.
 type Fetcher struct {
-	userAgent string
-	timeout   time.Duration
-	maxBody   int
+	collector *colly.Collector
 }
 
 // Options configures a [Fetcher]. The zero value keeps every default.
@@ -53,14 +56,43 @@ type Options struct {
 
 // New returns a fetcher.
 func New(opts Options) *Fetcher {
-	fetcher := &Fetcher{userAgent: opts.UserAgent, timeout: opts.Timeout, maxBody: maxBody}
-	if fetcher.userAgent == "" {
-		fetcher.userAgent = UserAgent
+	return &Fetcher{collector: newCollector(opts)}
+}
+
+// newCollector builds the collector that serves every request.
+func newCollector(opts Options) *colly.Collector {
+	userAgent := opts.UserAgent
+	if userAgent == "" {
+		userAgent = UserAgent
 	}
-	if fetcher.timeout <= 0 {
-		fetcher.timeout = DefaultTimeout
+	timeout := opts.Timeout
+	if timeout <= 0 {
+		timeout = DefaultTimeout
 	}
-	return fetcher
+
+	collector := colly.NewCollector(colly.UserAgent(userAgent), colly.AllowURLRevisit())
+	// A response with an error status carries headers and a body worth
+	// probing, so it reaches the response callback rather than the error
+	// callback.
+	collector.ParseHTTPErrorResponse = true
+	// The rules a site publishes decide which of its pages this tool reads.
+	collector.IgnoreRobotsTxt = false
+	collector.MaxBodySize = maxBody
+	collector.SetRequestTimeout(timeout)
+	collector.OnResponse(func(response *colly.Response) {
+		collected, ok := response.Ctx.GetAny(collectionKey).(*collection)
+		if !ok {
+			return
+		}
+		collected.page = &Page{
+			URL:    response.Request.URL,
+			Status: response.StatusCode,
+			Type:   mediaType(response.Headers.Get("Content-Type")),
+			Header: *response.Headers,
+			Body:   response.Body,
+		}
+	})
+	return collector
 }
 
 // Page is one HTTP response.
@@ -78,12 +110,15 @@ type Page struct {
 }
 
 // Get fetches rawURL, asking for the media types in accept. A response with an
-// error status still arrives as a page; only a failed transfer errors.
+// error status still arrives as a page; a failed transfer, and a URL the
+// site's robots.txt file disallows, return an error.
 func (f *Fetcher) Get(rawURL, accept string) (*Page, error) {
 	collected := &collection{}
-	collector := f.collector(collected)
+	ctx := colly.NewContext()
+	ctx.Put(collectionKey, collected)
+
 	headers := http.Header{"Accept": {accept}}
-	if err := collector.Request(http.MethodGet, rawURL, nil, nil, headers); err != nil {
+	if err := f.collector.Request(http.MethodGet, rawURL, nil, ctx, headers); err != nil {
 		return nil, fmt.Errorf("fetch %s: %w", rawURL, err)
 	}
 	if collected.page == nil {
@@ -111,28 +146,6 @@ func (p *Page) Text() string {
 // which report the response rather than return it.
 type collection struct {
 	page *Page
-}
-
-// collector builds a collector that drops the response it fetches into
-// collected. One collector serves one request, because colly keeps state
-// (visited URLs, cookies) that the next request must not inherit.
-func (f *Fetcher) collector(collected *collection) *colly.Collector {
-	collector := colly.NewCollector(colly.UserAgent(f.userAgent))
-	// An error status carries headers and a body worth probing, so it reaches
-	// the response callback rather than the error callback.
-	collector.ParseHTTPErrorResponse = true
-	collector.MaxBodySize = f.maxBody
-	collector.SetRequestTimeout(f.timeout)
-	collector.OnResponse(func(response *colly.Response) {
-		collected.page = &Page{
-			URL:    response.Request.URL,
-			Status: response.StatusCode,
-			Type:   mediaType(response.Headers.Get("Content-Type")),
-			Header: *response.Headers,
-			Body:   response.Body,
-		}
-	})
-	return collector
 }
 
 // mediaType returns the media type of a `Content-Type` header value, without

@@ -43,8 +43,8 @@ func TestDoFetchesTheURLFromStdin(t *testing.T) {
 	if got, want := stdout.String(), markdownBody; got != want {
 		t.Errorf("stdout = %q, want %q", got, want)
 	}
-	if !strings.Contains(stderr.String(), "negotiated") {
-		t.Errorf("stderr = %q, want the branch", stderr)
+	if stderr.Len() != 0 {
+		t.Errorf("stderr = %q, want empty", stderr)
 	}
 }
 
@@ -89,22 +89,6 @@ func TestDoPrintsJSON(t *testing.T) {
 	}
 }
 
-func TestDoQuietDropsTheNote(t *testing.T) {
-	t.Parallel()
-
-	base := markdownServer(t)
-	stderr := &bytes.Buffer{}
-
-	code := do([]string{"-q", base + "/guide"}, nil, &bytes.Buffer{}, stderr)
-
-	if code != exitOK {
-		t.Fatalf("do returned %d, want %d", code, exitOK)
-	}
-	if stderr.Len() != 0 {
-		t.Errorf("stderr = %q, want empty", stderr)
-	}
-}
-
 func TestDoReportsAFailedFetch(t *testing.T) {
 	t.Parallel()
 
@@ -132,6 +116,7 @@ func TestDoRejectsMalformedInvocations(t *testing.T) {
 
 	tests := map[string][]string{
 		"unknown flag":    {"-verbose", "example.com"},
+		"removed flag":    {"-q", "example.com"},
 		"two URLs":        {"example.com", "example.net"},
 		"no timeout":      {"-t", "0s", "example.com"},
 		"unknown timeout": {"-t", "soon", "example.com"},

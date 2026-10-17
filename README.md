@@ -31,16 +31,16 @@ printf '%s' 'golang generics tutorial' | agentic-web-search
 
 ### `agentic-web-fetch`
 
-The command needs no account and no API key: it reaches the site itself. The URL arrives as the single argument, or on standard input when the command line carries none:
+The command needs no account and no API key: it reaches the site itself, and honours the `robots.txt` rules the site publishes. The URL arrives as the single argument, or on standard input when the command line carries none:
 
 ```sh
 agentic-web-fetch https://go.dev/doc/go1.27 > page.md
 printf '%s' 'https://example.com/docs/guide' | agentic-web-fetch
 ```
 
-Six branches are tried in order, and the branch taken goes to standard error (or into the `-json` payload): content negotiation, a `rel="alternate" type="text/markdown"` link, the `.md` variant of the URL, an `llms.txt` file that covers the page, a site rule, and the cleaned HTML.
+Six branches are tried in order, and the `-json` payload names the one taken: content negotiation, a `rel="alternate" type="text/markdown"` link, the `.md` variant of the URL, an `llms.txt` file that covers the page, a site rule, and the cleaned HTML.
 
-A page the generic pass reads badly gets a rule in `siteRules` ([`cmd/agentic-web-fetch/main.go`](cmd/agentic-web-fetch/main.go)). A rule names the hosts it serves, the CSS selector that holds the readable part, and the page furniture to remove before conversion. It optionally carries a mirror: a raw file, an API, or a host that serves the same content without the furniture.
+A caller outside this module builds the same reader from [`pkg/webfetch`](pkg/webfetch), with its own rules. A page the generic pass reads badly gets a rule in `siteRules` ([`cmd/agentic-web-fetch/main.go`](cmd/agentic-web-fetch/main.go)). A rule names the hosts it serves, the CSS selector that holds the readable part, and the page furniture to remove before conversion. It optionally carries a mirror: a raw file, an API, or a host that serves the same content without the furniture.
 
 ```go
 registry := webfetch.NewRegistry()

@@ -50,13 +50,15 @@ func TestGetAsksForTheMediaTypesItIsGiven(t *testing.T) {
 
 	headers := make(chan http.Header, 1)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		headers <- r.Header.Clone()
+		if r.URL.Path == "/guide" {
+			headers <- r.Header.Clone()
+		}
 		w.Header().Set("Content-Type", "text/markdown")
 		w.Write([]byte("# Guide\n"))
 	}))
 	t.Cleanup(server.Close)
 
-	page, err := New(Options{}).Get(server.URL, "text/markdown")
+	page, err := New(Options{}).Get(server.URL+"/guide", "text/markdown")
 	if err != nil {
 		t.Fatalf("Get: %v", err)
 	}
@@ -109,5 +111,71 @@ func TestGetReportsTheAddressTheResponseCameFrom(t *testing.T) {
 	}
 	if got, want := page.URL.String(), server.URL+"/new"; got != want {
 		t.Errorf("URL = %q, want %q", got, want)
+	}
+}
+
+func TestGetHonoursRobotsTxt(t *testing.T) {
+	t.Parallel()
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/robots.txt" {
+			w.Write([]byte("User-agent: *\nDisallow: /private\n"))
+			return
+		}
+		w.Header().Set("Content-Type", "text/markdown")
+		w.Write([]byte("# Guide\n"))
+	}))
+	t.Cleanup(server.Close)
+
+	fetcher := New(Options{})
+	if _, err := fetcher.Get(server.URL+"/open", "text/markdown"); err != nil {
+		t.Errorf("Get(/open) returned %v, want the page", err)
+	}
+	if _, err := fetcher.Get(server.URL+"/private/guide", "text/markdown"); err == nil {
+		t.Error("Get(/private/guide) returned no error, want the robots.txt refusal")
+	}
+}
+
+func TestGetReadsRobotsTxtOnce(t *testing.T) {
+	t.Parallel()
+
+	reads := make(chan struct{}, 4)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/robots.txt" {
+			reads <- struct{}{}
+			w.Write([]byte("User-agent: *\nAllow: /\n"))
+			return
+		}
+		w.Header().Set("Content-Type", "text/markdown")
+		w.Write([]byte("# Guide\n"))
+	}))
+	t.Cleanup(server.Close)
+
+	fetcher := New(Options{})
+	for _, path := range []string{"/one", "/two"} {
+		if _, err := fetcher.Get(server.URL+path, "text/markdown"); err != nil {
+			t.Fatalf("Get(%s): %v", path, err)
+		}
+	}
+	if got := len(reads); got != 1 {
+		t.Errorf("the site answered %d robots.txt reads, want 1", got)
+	}
+}
+
+func TestGetKeepsASiteWithoutRobotsTxtOpen(t *testing.T) {
+	t.Parallel()
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/robots.txt" {
+			http.NotFound(w, r)
+			return
+		}
+		w.Header().Set("Content-Type", "text/markdown")
+		w.Write([]byte("# Guide\n"))
+	}))
+	t.Cleanup(server.Close)
+
+	if _, err := New(Options{}).Get(server.URL+"/guide", "text/markdown"); err != nil {
+		t.Errorf("Get returned %v for a site without robots.txt", err)
 	}
 }

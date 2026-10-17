@@ -14,7 +14,7 @@ import (
 
 const (
 	// defaultTimeout bounds one request.
-	defaultTimeout = 30 * time.Second
+	defaultTimeout = 32 * time.Second
 	// urlBytes caps a URL read from standard input.
 	urlBytes = 4 << 10
 	// schemeSep separates a URL's scheme from the address that follows it, and
@@ -30,16 +30,14 @@ command line carries none. A terminal there carries no URL, so the command
 exits 2 instead of blocking on a prompt, and an address without a scheme takes
 the https one.
 
-The content goes to standard output. The note naming the branch that produced
-it goes to standard error, and -json carries the branch inside the payload
-instead.`
+Standard output carries the content alone. -json adds the address the content
+came from and the branch that produced it.`
 
 // options holds the parsed command line.
 type options struct {
 	target  string
 	timeout time.Duration
 	json    bool
-	quiet   bool
 	skill   bool
 }
 
@@ -50,7 +48,6 @@ func newFlags(opts *options) *flag.FlagSet {
 	flags.SetOutput(io.Discard)
 	flags.DurationVar(&opts.timeout, "t", defaultTimeout, "timeout of one request, as a duration")
 	flags.BoolVar(&opts.json, "json", false, "print the URL, the method, and the content as one line of JSON")
-	flags.BoolVar(&opts.quiet, "q", false, "suppress the note on standard error")
 	flags.BoolVar(&opts.skill, "skill", false, "print the skill document and exit")
 	flags.Usage = cli.Usage(command, flags, notes)
 	return flags

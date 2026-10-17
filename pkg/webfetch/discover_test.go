@@ -285,3 +285,20 @@ func TestReadReportsAFailedTransfer(t *testing.T) {
 		t.Fatal("Read returned no error for an unreachable host")
 	}
 }
+
+func TestReadReportsARobotsTxtRefusal(t *testing.T) {
+	t.Parallel()
+
+	base := serve(t, map[string]page{
+		"/robots.txt": markdownPage("User-agent: *\nDisallow: /guide\n"),
+		"/guide":      markdownPage("# Guide\n"),
+	})
+
+	_, err := Read(New(Options{}), NewRegistry(), base+"/guide")
+	if err == nil {
+		t.Fatal("Read returned no error for a page robots.txt disallows")
+	}
+	if !strings.Contains(err.Error(), "robots.txt") {
+		t.Errorf("error = %q, want the robots.txt refusal", err)
+	}
+}

@@ -1,6 +1,6 @@
 ---
 name: agentic-web-fetch
-description: Use when you have a URL and need the page content as markdown.
+description: Use when you need a web page's text as Markdown.
 ---
 
 # agentic-web-fetch
@@ -9,28 +9,29 @@ description: Use when you have a URL and need the page content as markdown.
 {{usage}}
 ```
 
-## JSON
+## Output
 
-Under `-json` the command prints one line in this shape:
+Standard output carries the content alone. `-json` prints one line in this
+shape:
 
 ```json
 {"url": "https://example.com/docs/guide", "method": "md-variant", "content": "# Guide\n\nText.\n"}
 ```
 
 `url` holds the address the content came from, which differs from the requested
-URL after a redirect or a negotiation. `content` holds the markdown, with its
+URL after a redirect or a negotiation. `content` holds the Markdown, with its
 line breaks escaped onto the JSON line. `method` names the branch that produced
 the content, tried in this order:
 
-- `negotiated` — the site answered the request for markdown with markdown;
+- `negotiated` — the site answered the request for Markdown with Markdown;
 - `alternate` — a `rel="alternate" type="text/markdown"` link, in the page or in a `Link:` header;
 - `md-variant` — the `.md` variant of the URL, the convention of [the llms.txt proposal](https://llmstxt.org/);
 - `llms.txt` — an `llms.txt` file that covers the page, or an entry from one;
 - `rule:<name>` — a site rule;
 - `generic` — HTML with its furniture stripped.
 
-Under the plain mode stdout holds the content alone, and stderr holds the
-branch as `↳ <url> — <method>`.
+A page the site's `robots.txt` file disallows fails, and exit code 1 reports
+it.
 
 ## Examples
 

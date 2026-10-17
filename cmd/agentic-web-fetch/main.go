@@ -11,7 +11,7 @@ import (
 	"os"
 
 	"agents.kafo.dev/tools/internal/skill"
-	"agents.kafo.dev/tools/internal/webfetch"
+	"agents.kafo.dev/tools/pkg/webfetch"
 )
 
 // Exit codes shared by every agentic command.
@@ -60,20 +60,11 @@ func do(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 		errOut.write(command + ": " + err.Error() + "\n")
 		return exitFail
 	}
-	if renderErr := webfetch.Render(stdout, notesInto(errOut, opts), result, opts.json); renderErr != nil {
+	if renderErr := render(stdout, result, opts.json); renderErr != nil {
 		errOut.write(command + ": " + renderErr.Error() + "\n")
 		return exitFail
 	}
 	return exitOf(out)
-}
-
-// notesInto returns the stream the provenance note goes to. The JSON payload
-// carries the branch itself, and `-q` asks for silence.
-func notesInto(errOut io.Writer, opts options) io.Writer {
-	if opts.json || opts.quiet {
-		return io.Discard
-	}
-	return errOut
 }
 
 // siteRules returns the site rules the command reads with. The registry holds

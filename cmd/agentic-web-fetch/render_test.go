@@ -1,35 +1,31 @@
-package webfetch
+package main
 
 import (
 	"bytes"
 	"encoding/json"
 	"strings"
 	"testing"
+
+	"agents.kafo.dev/tools/pkg/webfetch"
 )
 
 // sample is one result, as the renderer receives it.
-var sample = Result{
+var sample = webfetch.Result{
 	URL:     "https://example.com/guide",
-	Method:  MethodVariant,
+	Method:  webfetch.MethodVariant,
 	Content: "# Guide\n\nBody text.\n",
 }
 
 func TestRenderWritesTheContentAlone(t *testing.T) {
 	t.Parallel()
 
-	stdout, notes := &bytes.Buffer{}, &bytes.Buffer{}
+	stdout := &bytes.Buffer{}
 
-	if err := Render(stdout, notes, sample, false); err != nil {
-		t.Fatalf("Render: %v", err)
+	if err := render(stdout, sample, false); err != nil {
+		t.Fatalf("render: %v", err)
 	}
 	if got := stdout.String(); got != sample.Content {
 		t.Errorf("stdout = %q, want %q", got, sample.Content)
-	}
-	if !strings.Contains(notes.String(), sample.URL) {
-		t.Errorf("notes = %q, want the URL", notes.String())
-	}
-	if !strings.Contains(notes.String(), sample.Method) {
-		t.Errorf("notes = %q, want the method", notes.String())
 	}
 }
 
@@ -37,10 +33,10 @@ func TestRenderEndsTheContentWithOneBreak(t *testing.T) {
 	t.Parallel()
 
 	stdout := &bytes.Buffer{}
-	unterminated := Result{URL: sample.URL, Method: sample.Method, Content: "# Guide\n\n\n"}
+	unterminated := webfetch.Result{URL: sample.URL, Method: sample.Method, Content: "# Guide\n\n\n"}
 
-	if err := Render(stdout, &bytes.Buffer{}, unterminated, false); err != nil {
-		t.Fatalf("Render: %v", err)
+	if err := render(stdout, unterminated, false); err != nil {
+		t.Fatalf("render: %v", err)
 	}
 	if got, want := stdout.String(), "# Guide\n"; got != want {
 		t.Errorf("stdout = %q, want %q", got, want)
@@ -52,8 +48,8 @@ func TestRenderWritesOneLineOfJSON(t *testing.T) {
 
 	stdout := &bytes.Buffer{}
 
-	if err := Render(stdout, &bytes.Buffer{}, sample, true); err != nil {
-		t.Fatalf("Render: %v", err)
+	if err := render(stdout, sample, true); err != nil {
+		t.Fatalf("render: %v", err)
 	}
 	line := strings.TrimSuffix(stdout.String(), "\n")
 	if strings.ContainsRune(line, '\n') {
