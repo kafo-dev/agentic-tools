@@ -1,0 +1,29 @@
+---
+name: agentic-<name>
+description: Use when <the situation that calls for the command>.
+---
+
+# agentic-<name>
+
+```text
+{{usage}}
+```
+
+## JSON
+
+Under `-json` the command prints one line in this shape:
+
+```json
+[{"<field>": "<value>"}]
+```
+
+<!-- Name every field and its type: an agent parses this line without reading the source. -->
+
+## Examples
+
+<!-- Compose the command with the tools around it, one whole pipeline per example. -->
+
+```sh
+<producer> | agentic-<name>
+agentic-<name> <query> | jq -r '.[].<field>'
+```
