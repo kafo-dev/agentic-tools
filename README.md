@@ -13,6 +13,21 @@ A command in this module wraps something that already runs — a command-line pr
 - Plain text by default, one line of JSON under `-json`;
 - A status code that separates success, failure, and a malformed invocation;
 
+## Commands
+
+- `agentic-web-search` — searches the web through Exa's keyless MCP tier and prints one URL and one-line summary per result. `-json` emits the same list as one line of JSON, and `-skill` prints the skill document that teaches an agent to use it.
+
+### `agentic-web-search`
+
+The command needs no account and no API key: it queries Exa's hosted MCP endpoint in keyless mode, inside a per-IP rate limit shared with every other Exa client behind the same address. The search terms arrive as arguments, or on standard input when the command line carries none:
+
+```sh
+agentic-web-search "official Go 1.27 release notes"
+printf '%s' 'golang generics tutorial' | agentic-web-search
+```
+
+`EXA_MCP_URL` points the command at another MCP endpoint.
+
 ## Install
 
 ```sh
