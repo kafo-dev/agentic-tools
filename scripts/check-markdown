@@ -31,6 +31,8 @@ ignore="$ignore,SpellCheck"
 ignore="$ignore,UseTitleCase"
 # Unit symbols (`KiB`, `MB`) stay as written; the rule wants them spelled out.
 ignore="$ignore,ExpandMemoryShorthands"
+# `TODO` stays as written, in a heading and in a file name.
+ignore="$ignore,ToDoHyphen"
 
 md_paths() {
 	if [ -n "$skip_path" ]; then
