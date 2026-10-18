@@ -6,7 +6,7 @@ import (
 	"context"
 	"io"
 
-	"agents.kafo.dev/tools/pkg/exa"
+	"agentic.kafo.dev/tools/pkg/exa"
 )
 
 // Searcher fetches the results for a query.

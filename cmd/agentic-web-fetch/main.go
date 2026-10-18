@@ -10,8 +10,8 @@ import (
 	"io"
 	"os"
 
-	"agents.kafo.dev/tools/internal/skill"
-	"agents.kafo.dev/tools/pkg/webfetch"
+	"agentic.kafo.dev/tools/internal/skill"
+	"agentic.kafo.dev/tools/pkg/webfetch"
 )
 
 // Exit codes shared by every agentic command.

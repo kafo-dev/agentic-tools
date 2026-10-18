@@ -57,7 +57,7 @@ The registry ships empty, so every page goes through the generic pass until a ru
 ## Install
 
 ```sh
-go install agents.kafo.dev/tools/cmd/...@latest
+go install agentic.kafo.dev/tools/cmd/...@latest
 ```
 
 ## License

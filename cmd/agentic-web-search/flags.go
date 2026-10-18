@@ -8,7 +8,7 @@ import (
 	"os"
 	"strings"
 
-	"agents.kafo.dev/tools/internal/cli"
+	"agentic.kafo.dev/tools/internal/cli"
 )
 
 const (

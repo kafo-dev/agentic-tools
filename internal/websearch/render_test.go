@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"agents.kafo.dev/tools/pkg/exa"
+	"agentic.kafo.dev/tools/pkg/exa"
 )
 
 func TestSummarize(t *testing.T) {

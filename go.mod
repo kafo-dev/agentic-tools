@@ -1,4 +1,4 @@
-module agents.kafo.dev/tools
+module agentic.kafo.dev/tools
 
 go 1.27.1
 

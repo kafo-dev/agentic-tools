@@ -6,7 +6,7 @@ import (
 	"io"
 	"strings"
 
-	"agents.kafo.dev/tools/pkg/webfetch"
+	"agentic.kafo.dev/tools/pkg/webfetch"
 )
 
 // contentItem is the payload of `-json`, one line of JSON.

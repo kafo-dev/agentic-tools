@@ -11,9 +11,9 @@ import (
 	"os"
 	"time"
 
-	"agents.kafo.dev/tools/internal/skill"
-	"agents.kafo.dev/tools/internal/websearch"
-	"agents.kafo.dev/tools/pkg/exa"
+	"agentic.kafo.dev/tools/internal/skill"
+	"agentic.kafo.dev/tools/internal/websearch"
+	"agentic.kafo.dev/tools/pkg/exa"
 )
 
 // Exit codes shared by every agentic command.

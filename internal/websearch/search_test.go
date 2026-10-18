@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"agents.kafo.dev/tools/pkg/exa"
+	"agentic.kafo.dev/tools/pkg/exa"
 )
 
 // fakeSearcher returns canned results, or a canned error.

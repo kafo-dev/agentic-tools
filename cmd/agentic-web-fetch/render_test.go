@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"agents.kafo.dev/tools/pkg/webfetch"
+	"agentic.kafo.dev/tools/pkg/webfetch"
 )
 
 // sample is one result, as the renderer receives it.

@@ -5,7 +5,7 @@ import (
 	"io"
 	"strings"
 
-	"agents.kafo.dev/tools/pkg/exa"
+	"agentic.kafo.dev/tools/pkg/exa"
 )
 
 const (
